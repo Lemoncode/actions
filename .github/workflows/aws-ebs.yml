@@ -7,12 +7,12 @@ on:
         required: false
         default: "* .dockerignore"
         type: string
-        description: Files 
+        description: Files
       dockerArgs:
         required: false
-        default: ''
+        default: ""
         type: string
-      
+
     secrets:
       AWS_EB_APP_NAME:
         required: true
@@ -51,7 +51,7 @@ jobs:
         run: |
           cp tmp/aws-ebs-resources/docker-compose.yml docker-compose-yml
           ls -a
-          sh ./tmp/aws-ebs-resources/scripts/replace-args.sh ${{inputs.dockerArgs}} ../../../docker-compose.yml
+          sh ./tmp/aws-ebs-resources/scripts/replace-args.sh "${{inputs.dockerArgs}}" ../../../docker-compose.yml
       - name: Remove temporal folder
         run: |
           ls -a
