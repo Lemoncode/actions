@@ -41,21 +41,21 @@ jobs:
         with:
           repository: Nasdan/actions
           ref: main
-          path: tmp-actions
+          path: tmp
       - name: Copy AWS EBS deploy folders
         run: |
-          cp -R tmp-actions/aws-ebs-resources/.ebextensions .ebextensions
-          cp -R tmp-actions/aws-ebs-resources/.platform .platform
+          cp -R ./tmp/aws-ebs-resources/.ebextensions .ebextensions
+          cp -R ./tmp/aws-ebs-resources/.platform .platform
       - name: Feed Docker ARGs
         if: ${{inputs.dockerArgs}} != ''
         run: |
-          cp tmp-actions/aws-ebs-resources/docker-compose.yml docker-compose-yml
-          sh tmp-actions/aws-ebs-resources/scripts/replace-args.sh ${{inputs.dockerArgs}}
+          cp ./tmp/aws-ebs-resources/docker-compose.yml docker-compose-yml
+          sh ./tmp/aws-ebs-resources/scripts/replace-args.sh ${{inputs.dockerArgs}}
       - name: Remove temporal folder
         run: |
           ls -a
           cat docker-compose.yml
-          rm -rf tmp-actions
+          rm -rf tmp
       # - name: AWS login
       #   uses: aws-actions/configure-aws-credentials@v1
       #   with:
