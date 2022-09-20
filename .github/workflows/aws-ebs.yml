@@ -50,8 +50,6 @@ jobs:
         if: ${{inputs.dockerArgs}} != ''
         run: |
           ls tmp/aws-ebs-resources
-          cp tmp/aws-ebs-resources/docker-compose.yml docker-compose-yml
-          sh tmp/aws-ebs-resources/scripts/replace-args.sh ${{inputs.dockerArgs}}
       - name: Remove temporal folder
         run: |
           ls -a
