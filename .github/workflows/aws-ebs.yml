@@ -42,6 +42,7 @@ jobs:
           repository: Nasdan/actions
           ref: main
           path: tmp
+      - run: ls -a tmp
       - name: Copy AWS EBS deploy folders
         run: |
           cp -R tmp/aws-ebs-resources/.ebextensions .ebextensions
