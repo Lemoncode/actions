@@ -51,7 +51,7 @@ jobs:
         run: |
           cp tmp/aws-ebs-resources/docker-compose.yml docker-compose-yml
           ls -a
-          sed -i docker-compose.yml -e"/args:$/a\ hello"
+          sed -i docker-compose.yml -e "/args:$/a\ hello"
 #          sh tmp/aws-ebs-resources/scripts/replace-args.sh "${{inputs.dockerArgs}}" docker-compose.yml
       - name: Remove temporal folder
         run: |
