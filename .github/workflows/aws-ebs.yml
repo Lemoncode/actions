@@ -24,7 +24,7 @@ on:
         required: true
 
 env:
-  APP_VERSION_LABEL: ${{ secrets.AWS_EB_APP_NAME }}-${GITHUB_RUN_ID}-${GITHUB_SHA}-${GITHUB_RUN_ATTEMPT}
+  APP_VERSION_LABEL: ${{ secrets.AWS_EB_APP_NAME }}-${{ secrets.AWS_EB_ENV_NAME }}-${GITHUB_RUN_ID}-${GITHUB_SHA}-${GITHUB_RUN_ATTEMPT}
 
 jobs:
   deploy-aws-ebs:
