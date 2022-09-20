@@ -44,13 +44,12 @@ jobs:
           path: tmp
       - name: Copy AWS EBS deploy folders
         run: |
-          cp -R ./tmp/aws-ebs-resources/.ebextensions .ebextensions
-          cp -R ./tmp/aws-ebs-resources/.platform .platform
+          cp -R tmp/aws-ebs-resources/.ebextensions .ebextensions
+          cp -R tmp/aws-ebs-resources/.platform .platform
+          cp tmp/aws-ebs-resources/docker-compose.yml docker-compose-yml
       - name: Feed Docker ARGs
         if: ${{inputs.dockerArgs}} != ''
-        run: |
-          cp ./tmp/aws-ebs-resources/docker-compose.yml docker-compose-yml
-          sh ./tmp/aws-ebs-resources/scripts/replace-args.sh ${{inputs.dockerArgs}}
+        run: sh tmp/aws-ebs-resources/scripts/replace-args.sh ${{inputs.dockerArgs}}
       - name: Remove temporal folder
         run: |
           ls -a
