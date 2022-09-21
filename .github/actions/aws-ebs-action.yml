@@ -1,0 +1,50 @@
+name: Deploy to AWS EBS and Docker Action
+inputs:
+  files-to-zip:
+    required: false
+    default: '* .dockerignore'
+    type: string
+    description: Files
+  dockerArgs:
+    required: false
+    default: ''
+    type: string
+  AWS_EB_APP_NAME:
+    required: true
+  AWS_EB_ENV_NAME:
+    required: true
+  AWS_DEPLOY_ACCESS_KEY_ID:
+    required: true
+  AWS_DEPLOY_SECRET_ACCESS_KEY:
+    required: true
+  AWS_REGION:
+    required: true
+  AWS_DEPLOY_S3_BUCKET:
+    required: true
+
+env:
+  APP_VERSION_LABEL: ${{ secrets.AWS_EB_APP_NAME }}-${{ secrets.AWS_EB_ENV_NAME }}-${GITHUB_RUN_ID}-${GITHUB_SHA}-${GITHUB_RUN_ATTEMPT}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Checkout Actions repository
+      uses: actions/checkout@v3
+      with:
+        repository: lemoncode/actions
+        ref: main
+        path: tmp
+    - name: Copy AWS EBS deploy folders
+      run: |
+        cp -R tmp/aws-ebs-resources/.ebextensions .ebextensions
+        cp -R tmp/aws-ebs-resources/.platform .platform
+    - name: Feed Docker ARGs
+      if: inputs.dockerArgs != ''
+      run: |
+        cp tmp/aws-ebs-resources/docker-compose.yml docker-compose.yml
+        sh tmp/aws-ebs-resources/scripts/replace-args.sh "${{inputs.dockerArgs}}" docker-compose.yml
+        cat docker-compose.yml
+    - name: Remove temporal folder
+      run: rm -rf tmp
