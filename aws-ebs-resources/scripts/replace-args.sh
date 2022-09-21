@@ -1,6 +1,6 @@
 #!/bin/sh
 # Set delimiter
-IFS=$'* \\\n'
+IFS=$'* \\'
 for i in $1
 do
 sed -i "/args:$/a\
