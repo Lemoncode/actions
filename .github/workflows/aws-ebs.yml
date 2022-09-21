@@ -49,7 +49,7 @@ jobs:
       - name: Feed Docker ARGs
         if: ${{inputs.dockerArgs}} != ''
         run: |
-          echo "" > docker-compose-yml
+          echo "" > docker-compose.yml
           ls -a
           sed -i docker-compose.yml -e "/args:$/a\ hello"
 #         cp tmp/aws-ebs-resources/docker-compose.yml docker-compose-yml
