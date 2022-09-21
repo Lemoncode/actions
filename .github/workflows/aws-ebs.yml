@@ -49,14 +49,10 @@ jobs:
       - name: Feed Docker ARGs
         if: ${{inputs.dockerArgs}} != ''
         run: |
-          echo "" > docker-compose.yml
-          ls -a
-          sed -i docker-compose.yml -e "/args:$/a\ hello"
-#         cp tmp/aws-ebs-resources/docker-compose.yml docker-compose-yml
-#          sh tmp/aws-ebs-resources/scripts/replace-args.sh "${{inputs.dockerArgs}}" docker-compose.yml
+          cp tmp/aws-ebs-resources/docker-compose.yml docker-compose.yml
+          sh tmp/aws-ebs-resources/scripts/replace-args.sh "${{inputs.dockerArgs}}" docker-compose.yml
       - name: Remove temporal folder
         run: |
-          ls -a
           cat docker-compose.yml
           rm -rf tmp
       # - name: AWS login
