@@ -7,11 +7,18 @@ on:
         required: false
         default: '* .dockerignore'
         type: string
-        description: Files
+        description: Files to include in zip
       dockerArgs:
         required: false
         default: ''
         type: string
+        description: 'Docker build ARGs  (--build-args) splitted by \.
+          For example:
+            "BASE_ROOT_API_URL=/api \
+             BASE_USERS_API_URL=/api/users
+            "
+          As limitation: inputs does not allow secrets or env: https://stackoverflow.com/questions/73305126/passing-env-variable-inputs-to-a-reusable-workflow
+          '
 
     secrets:
       AWS_EB_APP_NAME:
@@ -28,26 +35,30 @@ on:
         required: true
 
 env:
+  # Give a unique version to the app deploy
   APP_VERSION_LABEL: ${{ secrets.AWS_EB_APP_NAME }}-${{ secrets.AWS_EB_ENV_NAME }}-${GITHUB_RUN_ID}-${GITHUB_SHA}-${GITHUB_RUN_ATTEMPT}
 
 jobs:
   deploy-aws-ebs:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout repository # Clone client repository, that is, any app that consumes this workflow
         uses: actions/checkout@v3
-      - name: Checkout Actions repository
+      - name: Checkout Actions repository # Clone this repository in tmp folder to get access to aws-ebs-resources
         uses: actions/checkout@v3
         with:
           repository: lemoncode/actions
           ref: main
           path: tmp
-      - name: Copy AWS EBS deploy folders
+      - name: Copy AWS EBS deploy folders # Copy .ebextensions and .platform folders in root path with EBS https and nginx config
         run: |
           cp -R tmp/aws-ebs-resources/.ebextensions .ebextensions
           cp -R tmp/aws-ebs-resources/.platform .platform
-      - name: Feed Docker ARGs
-        if: inputs.dockerArgs != ''
+      - name: Feed Docker ARGs # Consume docker ARGs from inputs and update docker-compose.yml template
+        if: inputs.dockerArgs != '' # Execute only if inputs.dockerArgs has value
+        # - Copy docker-compose.yml template in root path.
+        # - Use script to consume dockerArgs input as string format and convert it in YAML array to update the docker-compose.yml file
+        # - Show docker-compose.yml content for debug purpose
         run: |
           cp tmp/aws-ebs-resources/docker-compose.yml docker-compose.yml
           sh tmp/aws-ebs-resources/scripts/replace-args.sh "${{inputs.dockerArgs}}" docker-compose.yml
@@ -60,11 +71,11 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_DEPLOY_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_DEPLOY_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-      - name: Upload files to S3
+      - name: Upload files to S3 # Upload client repository source code to S3 (including only inputs.files-to-zip and .ebextensions .platform) in a zip file
         run: |
           zip -r ${{ env.APP_VERSION_LABEL }}.zip ${{inputs.files-to-zip}} .ebextensions .platform
           aws s3 cp ${{ env.APP_VERSION_LABEL }}.zip s3://${{ secrets.AWS_DEPLOY_S3_BUCKET }}/${{ env.APP_VERSION_LABEL }}.zip
-      - name: Create EB App version
+      - name: Create EB App version # Update Elastic Beanstalk App version with the previous uploaded to S3 one
         run: aws elasticbeanstalk create-application-version --application-name ${{ secrets.AWS_EB_APP_NAME }} --version-label ${{ env.APP_VERSION_LABEL }} --source-bundle S3Bucket=${{ secrets.AWS_DEPLOY_S3_BUCKET }},S3Key=${{ env.APP_VERSION_LABEL }}.zip --no-auto-create-application
-      - name: Update environment
+      - name: Update environment # Update Elastic Beanstalk Environment version with the previous uploaded to S3 one
         run: aws elasticbeanstalk update-environment --environment-name ${{ secrets.AWS_EB_ENV_NAME }} --version-label ${{ env.APP_VERSION_LABEL }}
