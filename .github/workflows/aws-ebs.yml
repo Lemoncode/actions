@@ -54,6 +54,7 @@ jobs:
         run: |
           cp -R tmp/aws-ebs-resources/.ebextensions .ebextensions
           cp -R tmp/aws-ebs-resources/.platform .platform
+          cat .platform/nginx/conf.d/https_custom.conf
       - name: Feed Docker ARGs # Consume docker ARGs from inputs and update docker-compose.yml template
         if: inputs.dockerArgs != '' # Execute only if inputs.dockerArgs has value
         # - Copy docker-compose.yml template in root path.
