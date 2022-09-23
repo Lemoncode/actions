@@ -48,7 +48,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: lemoncode/actions
-          ref: develop
+          ref: main
           path: tmp
       - name: Copy AWS EBS deploy folders # Copy .ebextensions and .platform folders in root path with EBS https and nginx config
         run: |
