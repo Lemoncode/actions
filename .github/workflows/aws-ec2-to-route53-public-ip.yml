@@ -16,7 +16,7 @@ on:
       AWS_DOMAIN_RECORD_NAME:
         required: true
 jobs:
-  deploy-aws-ebs:
+  update-route53-record:
     runs-on: ubuntu-latest
     steps:
       - name: AWS login
