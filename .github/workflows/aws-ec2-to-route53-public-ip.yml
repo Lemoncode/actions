@@ -1,0 +1,33 @@
+name: Update Route53 Record with EC2 Public IP
+
+on:
+  workflow_call:
+    secrets:
+      AWS_DEPLOY_ACCESS_KEY_ID:
+        required: true
+      AWS_DEPLOY_SECRET_ACCESS_KEY:
+        required: true
+      AWS_REGION:
+        required: true
+      AWS_EC2_INSTANCE_ID:
+        required: true
+      AWS_HOSTED_ZONE_ID:
+        required: true
+      AWS_DOMAIN_RECORD_NAME:
+        required: true
+jobs:
+  deploy-aws-ebs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: AWS login
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_DEPLOY_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEPLOY_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Get IP
+        run: |
+          PUBLIC_IP=$(aws ec2 describe-instances --instance-ids ${{secrets.AWS_EC2_INSTANCE_ID}} --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+          echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
+      - name: Update Route53 Record
+        run: aws route53 change-resource-record-sets --hosted-zone-id ${{secrets.AWS_HOSTED_ZONE_ID}} --change-batch '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"'${{secrets.AWS_DOMAIN_RECORD_NAME}}'","Type":"A","TTL":300,"ResourceRecords":[{"Value":"'$PUBLIC_IP'"}]}}]}'
