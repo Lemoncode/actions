@@ -1,0 +1,72 @@
+name: Deploy to AWS EC2 with SSH
+
+on:
+  workflow_call:
+    inputs:
+      dispatch-event:
+        required: true
+        type: string
+        description: "Event type to dispatch the action on repository with trigger 'repository_dispatch'. For example: 'dev-update-dns-record'. This event will be dispatched on any EC2 reboot"
+      organization:
+        required: true
+        type: string
+        description: "Organization name of the repository to dispatch the event"
+      repository:
+        required: true
+        type: string
+        description: "Repository name to dispatch the event"
+    secrets:
+      AWS_DEPLOY_ACCESS_KEY_ID:
+        required: true
+      AWS_DEPLOY_SECRET_ACCESS_KEY:
+        required: true
+      AWS_REGION:
+        required: true
+      AWS_EC2_INSTANCE_ID:
+        required: true
+      SSH_KEY:
+        required: true
+      SSH_USER:
+        required: true
+      GITHUB_TOKEN:
+        required: true
+        description: 'Github Token to give credentials to dispatch event. For example: update record on Route53 with EC2 Public IP'
+jobs:
+  set-dispatch-github-event-file:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Actions repository # Clone this repository in tmp folder to get access to aws-ebs-resources
+        uses: actions/checkout@v3
+        with:
+          repository: lemoncode/actions
+          ref: ${{ github.ref }}
+          path: tmp
+      - name: AWS login
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_DEPLOY_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEPLOY_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Set EC2 Public IP environment variable
+        run: |
+          PUBLIC_IP=$(aws ec2 describe-instances --instance-ids ${{secrets.AWS_EC2_INSTANCE_ID}} --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+          echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
+      - name: Set dispatch event file on EC2. It will be triggered on any EC2 reboot
+        run: |
+          echo "${{secrets.SSH_KEY}}" > private-key
+          sudo chmod 600 private-key
+          scp -o StrictHostKeyChecking=no -i private-key ./tmp/aws-ec2-deploy-resources/dispatch-github-event.sh ${{secrets.SSH_USER}}@$PUBLIC_IP:~/dispatch-github-event.sh
+          ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
+
+
+          sed -i -e '"'"'s|${EVENT}|'"'"'"${{inputs.dispatch-event}}"'"'"'|g; s|${GITHUB_TOKEN}|'"'"'"${{secrets.GITHUB_TOKEN}}"'"'"'|g; s|${ORGANIZATION}|'"'"'"${{inputs.organization}}"'"'"'|g; s|${REPOSITORY}|'"'"'"${{inputs.repository}}"'"'"'|g'"'"' ~/dispatch-github-event.sh
+
+          sudo cp ~/dispatch-github-event.sh /var/lib/cloud/scripts/per-boot/dispatch-github-event.sh
+          sudo chmod 744 /var/lib/cloud/scripts/per-boot/dispatch-github-event.sh
+          sudo rm ~/dispatch-github-event.sh
+
+          exit
+          '
+      - name: Remove temporal folder
+        run: rm -rf tmp
+
