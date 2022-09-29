@@ -15,10 +15,10 @@ on:
         required: true
         type: string
         description: "Repository name to dispatch the event"
-      deploySteps:
+      dockerImage:
         required: true
         type: string
-        description: "Deploy steps. For example: 'docker build / docker run'"
+        description: "Docker image name to create container"
     secrets:
       AWS_DEPLOY_ACCESS_KEY_ID:
         required: true
@@ -99,7 +99,7 @@ jobs:
           sudo usermod -a -G docker '${{secrets.SSH_USER}}'
           exit
           '
-  deploy-to-ec2:
+  run-docker-container-in-ec2:
     runs-on: ubuntu-latest
     needs: [set-dispatch-github-event-file, install-docker-on-ec2]
     steps:
@@ -121,7 +121,8 @@ jobs:
           sudo chmod 600 private-key
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
 
-          '${{inputs.deploySteps}}'
+          docker stop app
+          docker run --name app --rm -d -p 80:80 '${{inputs.dockerImage}}'
           exit
           '
 
