@@ -28,7 +28,7 @@ on:
         required: true
       SSH_USER:
         required: true
-      GITHUB_TOKEN:
+      TOKEN_TO_DISPATCH_EVENT:
         required: true
         description: 'Github Token to give credentials to dispatch event. For example: update record on Route53 with EC2 Public IP'
 jobs:
@@ -59,7 +59,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
 
 
-          sed -i -e '"'"'s|${EVENT}|'"'"'"${{inputs.dispatch-event}}"'"'"'|g; s|${GITHUB_TOKEN}|'"'"'"${{secrets.GITHUB_TOKEN}}"'"'"'|g; s|${ORGANIZATION}|'"'"'"${{inputs.organization}}"'"'"'|g; s|${REPOSITORY}|'"'"'"${{inputs.repository}}"'"'"'|g'"'"' ~/dispatch-github-event.sh
+          sed -i -e '"'"'s|${EVENT}|'"'"'"${{inputs.dispatch-event}}"'"'"'|g; s|${GITHUB_TOKEN}|'"'"'"${{secrets.TOKEN_TO_DISPATCH_EVENT}}"'"'"'|g; s|${ORGANIZATION}|'"'"'"${{inputs.organization}}"'"'"'|g; s|${REPOSITORY}|'"'"'"${{inputs.repository}}"'"'"'|g'"'"' ~/dispatch-github-event.sh
 
           sudo cp ~/dispatch-github-event.sh /var/lib/cloud/scripts/per-boot/dispatch-github-event.sh
           sudo chmod 744 /var/lib/cloud/scripts/per-boot/dispatch-github-event.sh
