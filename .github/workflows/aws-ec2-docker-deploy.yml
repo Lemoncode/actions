@@ -49,7 +49,12 @@ jobs:
           docker stop app
           docker run --name app --rm -d '${{inputs.dockerRunParams}}' '${{secrets.DOCKER_IMAGE_NAME}}'
           docker image prune -a -f
-          [ -e /home/'${{secrets.SSH_USER}}'/.docker/config.json ] && rm /home/'${{secrets.SSH_USER}}'/.docker/config.json
+
+          FILE=/home/'${{secrets.SSH_USER}}'/.docker/config.json
+          if test -f "$FILE"; then
+          rm $FILE
+          fi
+
           exit
           '
 
