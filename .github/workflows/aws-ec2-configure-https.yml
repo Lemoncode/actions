@@ -64,8 +64,9 @@ jobs:
           rm -rf $CERT_PATH
           fi
 
-          ln -sf /etc/letsencrypt/live/'${{secrets.DOMAIN_RECORD_NAME}}' /etc/letsencrypt/live/cert
+          sudo ln -sf /etc/letsencrypt/live/'${{secrets.DOMAIN_RECORD_NAME}}' /etc/letsencrypt/live/cert
 
+          echo "" >> etc/cron.d/certbot_renew
           echo "SHELL=/bin/sh
           PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
           0 0 * * 0 /usr/bin/certbot renew && systemctl restart nginx" > etc/cron.d/certbot_renew
