@@ -47,9 +47,9 @@ jobs:
           docker run --name app --rm -d '${{secrets.DOCKER_RUN_PARAMS}}' '${{secrets.DOCKER_IMAGE_NAME}}'
           docker image prune -a -f
 
-          FILE=/home/'${{secrets.SSH_USER}}'/.docker/config.json
-          if test -f "$FILE"; then
-          rm $FILE
+          DOCKER_CONFIG_FILE=/home/'${{secrets.SSH_USER}}'/.docker/config.json
+          if test -f "$DOCKER_CONFIG_FILE"; then
+          rm $DOCKER_CONFIG_FILE
           fi
 
           exit
