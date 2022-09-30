@@ -50,6 +50,7 @@ jobs:
           sudo chmod 600 private-key
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
 
+          service docker start
           docker stop app
           docker run --name app --rm -d '${{inputs.dockerRunParams}}' '${{secrets.DOCKER_IMAGE_NAME}}'
           docker image prune -a -f
