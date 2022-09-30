@@ -19,6 +19,11 @@ on:
         required: true
         type: string
         description: "Docker image name to create container"
+      awsDockerRegistry:
+        required: false
+        type: string
+        default: ''
+        description: "AWS Docker registry to pull images"
       dockerRunParams:
         required: false
         default: ''
@@ -120,6 +125,9 @@ jobs:
         run: |
           PUBLIC_IP=$(aws ec2 describe-instances --instance-ids ${{secrets.AWS_EC2_INSTANCE_ID}} --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
           echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
+      - name: AWS Docker login
+        if: inputs.awsDockerRegistry != ''
+        run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{inputs.awsDockerRegistry}}
       - name: Run docker container
         run: |
           echo "${{secrets.SSH_KEY}}" > private-key
