@@ -2,12 +2,6 @@ name: Deploy to AWS EC2 and Docker
 
 on:
   workflow_call:
-    inputs:
-      dockerRunParams:
-        required: false
-        default: ''
-        type: string
-        description: "Docker flags. For example env variables: '-e PORT=80'"
     secrets:
       AWS_DEPLOY_ACCESS_KEY_ID:
         required: true
@@ -20,6 +14,9 @@ on:
       DOCKER_IMAGE_NAME:
         required: true
         description: "Docker image name including registry. Format: <registry>/<app>:<tag>"
+      DOCKER_RUN_PARAMS:
+        required: false
+        description: "Docker flags. For example env variables: '-e PORT=80'"
       SSH_KEY:
         required: true
       SSH_USER:
@@ -47,7 +44,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
 
           docker stop app
-          docker run --name app --rm -d '${{inputs.dockerRunParams}}' '${{secrets.DOCKER_IMAGE_NAME}}'
+          docker run --name app --rm -d '${{secrets.DOCKER_RUN_PARAMS}}' '${{secrets.DOCKER_IMAGE_NAME}}'
           docker image prune -a -f
 
           FILE=/home/'${{secrets.SSH_USER}}'/.docker/config.json
