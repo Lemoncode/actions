@@ -55,7 +55,7 @@ jobs:
         run: |
           echo "${{secrets.SSH_KEY}}" > private-key
           sudo chmod 600 private-key
-          scp -o StrictHostKeyChecking=no -i private-key ./tmp/aws-ec2-deploy-resources/dispatch-github-event.sh ${{secrets.SSH_USER}}@$PUBLIC_IP:~/dispatch-github-event.sh
+          scp -o StrictHostKeyChecking=no -i private-key ./tmp/aws-ec2-allow-dispatch-github-event-resources/dispatch-github-event.sh ${{secrets.SSH_USER}}@$PUBLIC_IP:~/dispatch-github-event.sh
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
 
 

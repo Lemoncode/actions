@@ -23,6 +23,12 @@ jobs:
   install-nginx-and-letsencrypt:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Actions repository # Clone this repository in tmp folder to get access to resources
+        uses: actions/checkout@v3
+        with:
+          repository: lemoncode/actions
+          ref: ${{ github.ref }}
+          path: tmp
       - name: AWS login
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -37,10 +43,15 @@ jobs:
         run: |
           echo "${{secrets.SSH_KEY}}" > private-key
           sudo chmod 600 private-key
+          scp -o StrictHostKeyChecking=no -i private-key -r ./tmp/aws-ec2-configure-https-resources/dispatch-github-event.sh ${{secrets.SSH_USER}}@$PUBLIC_IP:~/nginx-config
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
 
           sudo yum update -y
           sudo amazon-linux-extras install nginx1
+
+          cat ~/nginx-config/nginx.conf > /etc/nginx/nginx.conf
+          cat ~/nginx-config/https_custom.conf > /etc/nginx/conf.d/https_custom.conf
+          sudo rm -rf ~/nginx-config
 
           sudo wget -r --no-parent -A 'epel-release-*.rpm' https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/
           sudo rpm -Uvh dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-*.rpm --force
@@ -53,11 +64,15 @@ jobs:
           rm -rf $CERT_PATH
           fi
 
-          ln -sf /etc/letsencrypt/live/'${{secrets.DOMAIN_RECORD_NAME}}' /etc/letsencrypt/live/ebcert
+          ln -sf /etc/letsencrypt/live/'${{secrets.DOMAIN_RECORD_NAME}}' /etc/letsencrypt/live/cert
 
           echo "SHELL=/bin/sh
           PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
           0 0 * * 0 /usr/bin/certbot renew && systemctl restart nginx" > etc/cron.d/certbot_renew
 
+          sudo systemctl restart cron
+
           exit
           '
+      - name: Remove temporal folder
+        run: rm -rf tmp
