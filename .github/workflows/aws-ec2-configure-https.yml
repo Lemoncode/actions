@@ -49,9 +49,8 @@ jobs:
           sudo yum update -y
           sudo amazon-linux-extras install nginx1
 
-          sudo cat ~/nginx-config/nginx.conf > /etc/nginx/nginx.conf
+          sudo su cat ~/nginx-config/nginx.conf > /etc/nginx/nginx.conf
           sudo cat ~/nginx-config/https_custom.conf > /etc/nginx/conf.d/https_custom.conf
-          sudo rm -rf ~/nginx-config
 
           sudo wget -r --no-parent -A 'epel-release-*.rpm' https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/
           sudo rpm -Uvh dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-*.rpm --force
