@@ -49,8 +49,11 @@ jobs:
           sudo yum update -y
           sudo amazon-linux-extras install nginx1
 
-          sudo su cat ~/nginx-config/nginx.conf > /etc/nginx/nginx.conf
-          sudo cat ~/nginx-config/https_custom.conf > /etc/nginx/conf.d/https_custom.conf
+          sudo su
+          cat /home/'${{secrets.SSH_USER}}'/nginx-config/nginx.conf > /etc/nginx/nginx.conf
+          cat /home/'${{secrets.SSH_USER}}'/nginx-config/https_custom.conf > /etc/nginx/conf.d/https_custom.conf
+          rm -rf /home/'${{secrets.SSH_USER}}'/nginx-config
+          su '${{secrets.SSH_USER}}'
 
           sudo wget -r --no-parent -A 'epel-release-*.rpm' https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/
           sudo rpm -Uvh dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-*.rpm --force
@@ -65,12 +68,14 @@ jobs:
 
           sudo ln -sf /etc/letsencrypt/live/'${{secrets.DOMAIN_RECORD_NAME}}' /etc/letsencrypt/live/cert
 
+          sudo su
           echo "" >> etc/cron.d/certbot_renew
           echo "SHELL=/bin/sh
           PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
           0 0 * * 0 /usr/bin/certbot renew && systemctl restart nginx" > etc/cron.d/certbot_renew
 
-          sudo systemctl restart cron
+          systemctl restart cron
+          su '${{secrets.SSH_USER}}'
 
           exit
           '
