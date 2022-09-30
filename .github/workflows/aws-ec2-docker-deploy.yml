@@ -29,7 +29,6 @@ on:
         required: true
 jobs:
   create-docker-container-in-ec2:
-    needs: [install-docker-on-ec2]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
