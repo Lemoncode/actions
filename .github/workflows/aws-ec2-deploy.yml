@@ -132,6 +132,7 @@ jobs:
           docker stop app
           docker run --name app --rm -d '${{inputs.dockerRunParams}}' '${{secrets.DOCKER_IMAGE_NAME}}'
           docker image prune -a -f
+          rm /home/'${{secrets.SSH_USER}}'/.docker/config.json
           exit
           '
 
