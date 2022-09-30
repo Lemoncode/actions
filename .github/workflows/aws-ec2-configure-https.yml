@@ -20,7 +20,7 @@ on:
       EMAIL:
         required: true
 jobs:
-  install-docker-on-ec2:
+  install-nginx-and-letsencrypt:
     runs-on: ubuntu-latest
     steps:
       - name: AWS login
@@ -46,7 +46,7 @@ jobs:
           sudo rpm -Uvh dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-*.rpm --force
           sudo yum-config-manager --enable epel*
           sudo yum install -y certbot
-          sudo certbot certonly --debug --non-interactive --email '${{secrets.EMAIL}}' --agree-tos --standalone --domains '${{secrets.DOMAIN_RECORD_NAME}}' --keep-until-expiring --pre-hook \"sudo service nginx stop\" --post-hook \"sudo service nginx start\"
+          sudo certbot certonly --debug --non-interactive --email '${{secrets.EMAIL}}' --agree-tos --standalone --domains '${{secrets.DOMAIN_RECORD_NAME}}' --keep-until-expiring --pre-hook "sudo service nginx stop" --post-hook "sudo service nginx start"
 
           CERT_PATH=/etc/letsencrypt/live/cert
           if test -f "$CERT_PATH"; then
