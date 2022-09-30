@@ -28,7 +28,33 @@ on:
       SSH_USER:
         required: true
 jobs:
+  install-docker-on-ec2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: AWS login
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_DEPLOY_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEPLOY_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Set EC2 Public IP environment variable
+        run: |
+          PUBLIC_IP=$(aws ec2 describe-instances --instance-ids ${{secrets.AWS_EC2_INSTANCE_ID}} --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+          echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
+      - name: Install docker on EC2
+        run: |
+          echo "${{secrets.SSH_KEY}}" > private-key
+          sudo chmod 600 private-key
+          ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
+
+          sudo yum update -y
+          sudo amazon-linux-extras install docker
+          sudo service docker start
+          sudo usermod -a -G docker '${{secrets.SSH_USER}}'
+          exit
+          '
   create-docker-container-in-ec2:
+    needs: [install-docker-on-ec2]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -50,7 +76,6 @@ jobs:
           sudo chmod 600 private-key
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
 
-          service docker start
           docker stop app
           docker run --name app --rm -d '${{inputs.dockerRunParams}}' '${{secrets.DOCKER_IMAGE_NAME}}'
           docker image prune -a -f
