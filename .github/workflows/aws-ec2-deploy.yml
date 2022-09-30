@@ -15,10 +15,6 @@ on:
         required: true
         type: string
         description: "Repository name to dispatch the event"
-      dockerImage:
-        required: true
-        type: string
-        description: "Docker image name to create container"
       dockerRunParams:
         required: false
         default: ''
