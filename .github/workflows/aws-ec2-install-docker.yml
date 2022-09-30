@@ -1,13 +1,7 @@
-name: Deploy to AWS EC2 and Docker
+name: Install Docker in EC2
 
 on:
   workflow_call:
-    inputs:
-      dockerRunParams:
-        required: false
-        default: ''
-        type: string
-        description: "Docker flags. For example env variables: '-e PORT=80'"
     secrets:
       AWS_DEPLOY_ACCESS_KEY_ID:
         required: true
@@ -17,23 +11,14 @@ on:
         required: true
       AWS_EC2_INSTANCE_ID:
         required: true
-      AWS_DOCKER_REGISTRY:
-        required: false
-        description: "AWS Docker registry to pull images"
-      DOCKER_IMAGE_NAME:
-        required: true
-        description: "Docker image name including registry. Format: <registry>/<app>:<tag>"
       SSH_KEY:
         required: true
       SSH_USER:
         required: true
 jobs:
-  create-docker-container-in-ec2:
-    needs: [install-docker-on-ec2]
+  install-docker-on-ec2:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
       - name: AWS login
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -44,17 +29,16 @@ jobs:
         run: |
           PUBLIC_IP=$(aws ec2 describe-instances --instance-ids ${{secrets.AWS_EC2_INSTANCE_ID}} --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
           echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
-#          aws ecr get-login-password --region '${{secrets.AWS_REGION}}' | docker login --username AWS --password-stdin '${{secrets.AWS_DOCKER_REGISTRY}}'
-      - name: Run docker container
+      - name: Install docker on EC2
         run: |
           echo "${{secrets.SSH_KEY}}" > private-key
           sudo chmod 600 private-key
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
 
-          docker stop app
-          docker run --name app --rm -d '${{inputs.dockerRunParams}}' '${{secrets.DOCKER_IMAGE_NAME}}'
-          docker image prune -a -f
-          rm /home/'${{secrets.SSH_USER}}'/.docker/config.json
+          sudo yum update -y
+          sudo amazon-linux-extras install docker
+          sudo systemctl enable docker
+          sudo systemctl start docker
+          sudo usermod -a -G docker '${{secrets.SSH_USER}}'
           exit
           '
-
