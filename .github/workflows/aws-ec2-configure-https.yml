@@ -74,5 +74,3 @@ jobs:
 
           exit
           '
-      - name: Remove temporal folder
-        run: rm -rf tmp
