@@ -36,6 +36,9 @@ on:
       AWS_DOCKER_REGISTRY:
         required: false
         description: "AWS Docker registry to pull images"
+      DOCKER_IMAGE_NAME:
+        required: true
+        description: "Docker image name including registry. Format: <registry>/<app>:<tag>"
       SSH_KEY:
         required: true
       SSH_USER:
@@ -127,7 +130,7 @@ jobs:
         env:
           AWS_DOCKER_REGISTRY: ${{secrets.AWS_DOCKER_REGISTRY}}
         if: ${{env.AWS_DOCKER_REGISTRY != '' }}
-        run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{secrets.AWS_DOCKER_REGISTRY}}
+        uses: aws-actions/amazon-ecr-login@v1
       - name: Run docker container
         run: |
           echo "${{secrets.SSH_KEY}}" > private-key
@@ -135,7 +138,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
 
           docker stop app
-          docker run --name app --rm -d '${{inputs.dockerRunParams}}' '${{secrets.AWS_DOCKER_REGISTRY}}/${{inputs.dockerImage}}'
+          docker run --name app --rm -d '${{inputs.dockerRunParams}}' '${{secrets.DOCKER_IMAGE_NAME}}'
           docker image prune -a -f
           exit
           '
