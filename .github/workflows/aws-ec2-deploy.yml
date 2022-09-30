@@ -135,7 +135,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
 
           docker stop app
-          docker run --name app --rm -d '${{inputs.dockerRunParams}}' '${{inputs.dockerImage}}'
+          docker run --name app --rm -d '${{inputs.dockerRunParams}}' '${{secrets.AWS_DOCKER_REGISTRY}}${{inputs.dockerImage}}'
           docker image prune -a -f
           exit
           '
