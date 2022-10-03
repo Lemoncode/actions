@@ -11,6 +11,8 @@ on:
         required: true
       AWS_EC2_INSTANCE_ID:
         required: true
+      AWS_DOCKER_REGISTRY:
+        required: true
       DOCKER_IMAGE_NAME:
         required: true
         description: "Docker image name including registry. Format: <registry>/<app>:<tag>"
@@ -42,6 +44,8 @@ jobs:
           echo "${{secrets.SSH_KEY}}" > private-key
           sudo chmod 600 private-key
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
+
+          aws ecr get-login-password --region '${{secrets.AWS_REGION}}' | docker login --username AWS --password-stdin '${{secrets.AWS_DOCKER_REGISTRY}}'
 
           docker stop app
           docker image prune -a -f
