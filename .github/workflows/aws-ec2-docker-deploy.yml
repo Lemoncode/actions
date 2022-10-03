@@ -39,6 +39,7 @@ jobs:
         run: |
           PUBLIC_IP=$(aws ec2 describe-instances --instance-ids ${{secrets.AWS_EC2_INSTANCE_ID}} --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
           echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
+      # Reference: https://stackoverflow.com/questions/63317771/launch-docker-automatically-when-starting-ec2-server
       - name: Run docker container
         run: |
           echo "${{secrets.SSH_KEY}}" > private-key
@@ -57,6 +58,22 @@ jobs:
           if test -f "$DOCKER_CONFIG_FILE"; then
           rm $DOCKER_CONFIG_FILE
           fi
+
+          echo "[Unit]
+          Description=docker boot
+          After=docker.service
+
+          [Service]
+          Type=oneshot
+          RemainAfterExit=yes
+          ExecStart=/usr/bin/docker start app
+
+          [Install]
+          WantedBy=multi-user.target" > ./docker_boot.service
+
+          sudo cp -v ./docker_boot.service /etc/systemd/system
+          sudo systemctl enable docker_boot.service
+          sudo systemctl start docker_boot.service
 
           exit
           '
