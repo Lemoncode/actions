@@ -47,7 +47,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
 
           sudo yum update -y
-          sudo amazon-linux-extras install nginx1
+          sudo amazon-linux-extras install nginx1 -y
 
           sudo cp /home/'${{secrets.SSH_USER}}'/nginx-config/nginx.conf /etc/nginx/nginx.conf
           sudo cp /home/'${{secrets.SSH_USER}}'/nginx-config/https_custom.conf /etc/nginx/conf.d/https_custom.conf
