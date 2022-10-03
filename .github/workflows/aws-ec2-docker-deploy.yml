@@ -45,6 +45,7 @@ jobs:
 
           docker stop app
           docker image prune -a -f
+          docker pull '${{secrets.DOCKER_IMAGE_NAME}}'
           docker run --name app --rm -d '${{secrets.DOCKER_RUN_PARAMS}}' '${{secrets.DOCKER_IMAGE_NAME}}'
           docker image prune -a -f
 
