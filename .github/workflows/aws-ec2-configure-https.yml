@@ -70,8 +70,9 @@ jobs:
           PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
           0 0 * * 0 /usr/bin/certbot renew && systemctl restart nginx" > ~/tmp
 
-          sudo cp ~/tmp etc/cron.d/certbot_renew
+          sudo cp -f ~/tmp /etc/cron.d/certbot_renew
           sudo rm ~/tmp
+          sudo chmod 744 /etc/cron.d/certbot_renew
           systemctl restart cron
 
           exit
