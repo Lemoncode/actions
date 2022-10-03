@@ -71,7 +71,7 @@ jobs:
 
           echo "SHELL=/bin/sh
           PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-          0 0 * * 0 /usr/bin/certbot renew && systemctl restart nginx" > ~/tmp
+          0 0 * * 0 /usr/bin/certbot renew && sudo systemctl restart nginx" > ~/tmp
 
           sudo cp -f ~/tmp /etc/cron.d/certbot_renew
           sudo rm ~/tmp
