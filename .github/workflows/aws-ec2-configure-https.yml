@@ -53,6 +53,9 @@ jobs:
           sudo cp /home/'${{secrets.SSH_USER}}'/nginx-config/https_custom.conf /etc/nginx/conf.d/https_custom.conf
           sudo rm -rf /home/'${{secrets.SSH_USER}}'/nginx-config
 
+          sudo systemctl enable nginx
+          sudo systemctl start nginx
+
           sudo wget -r --no-parent -A 'epel-release-*.rpm' https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/
           sudo rpm -Uvh dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-*.rpm --force
           sudo yum-config-manager --enable epel*
