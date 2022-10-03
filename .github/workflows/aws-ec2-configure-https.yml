@@ -76,7 +76,7 @@ jobs:
           sudo cp -f ~/tmp /etc/cron.d/certbot_renew
           sudo rm ~/tmp
           sudo chmod 744 /etc/cron.d/certbot_renew
-          systemctl restart cron
+          sudo systemctl restart cron
 
           exit
           '
