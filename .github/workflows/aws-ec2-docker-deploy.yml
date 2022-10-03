@@ -48,9 +48,9 @@ jobs:
           aws ecr get-login-password --region '${{secrets.AWS_REGION}}' | docker login --username AWS --password-stdin '${{secrets.AWS_DOCKER_REGISTRY}}'
 
           docker stop app
+          docker rm app
           docker image prune -a -f
-          docker pull '${{secrets.DOCKER_IMAGE_NAME}}'
-          docker run --name app --rm -d '${{secrets.DOCKER_RUN_PARAMS}}' '${{secrets.DOCKER_IMAGE_NAME}}'
+          docker run --name app -d '${{secrets.DOCKER_RUN_PARAMS}}' '${{secrets.DOCKER_IMAGE_NAME}}'
           docker image prune -a -f
 
           DOCKER_CONFIG_FILE=/home/'${{secrets.SSH_USER}}'/.docker/config.json
