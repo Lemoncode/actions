@@ -49,8 +49,8 @@ jobs:
           sudo yum update -y
           sudo amazon-linux-extras install nginx1 -y
 
-          sudo cp /home/'${{secrets.SSH_USER}}'/nginx-config/nginx.conf /etc/nginx/nginx.conf
-          sudo cp /home/'${{secrets.SSH_USER}}'/nginx-config/https_custom.conf /etc/nginx/conf.d/https_custom.conf
+          sudo cp -v /home/'${{secrets.SSH_USER}}'/nginx-config/nginx.conf /etc/nginx/nginx.conf
+          sudo cp -v /home/'${{secrets.SSH_USER}}'/nginx-config/https_custom.conf /etc/nginx/conf.d/https_custom.conf
           sudo rm -rf /home/'${{secrets.SSH_USER}}'/nginx-config
 
           sudo systemctl enable nginx
@@ -73,7 +73,7 @@ jobs:
           PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
           0 0 * * 0 /usr/bin/certbot renew && sudo systemctl restart nginx" > ~/tmp
 
-          sudo cp -f ~/tmp /etc/cron.d/certbot_renew
+          sudo cp -v -f ~/tmp /etc/cron.d/certbot_renew
           sudo rm ~/tmp
           sudo chmod 0644 /etc/cron.d/certbot_renew
           sudo systemctl start crond.service

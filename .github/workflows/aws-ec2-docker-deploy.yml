@@ -72,6 +72,7 @@ jobs:
           WantedBy=multi-user.target" > ./docker_boot.service
 
           sudo cp -v ./docker_boot.service /etc/systemd/system
+          sudo rm ./docker_boot.service
           sudo systemctl enable docker_boot.service
           sudo systemctl start docker_boot.service
 
