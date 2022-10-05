@@ -15,6 +15,10 @@ on:
         required: true
         type: string
         description: "Repository name to dispatch the event"
+      fileName:
+        required: false
+        type: string
+        default: 'dispatch-github-event'
     secrets:
       AWS_DEPLOY_ACCESS_KEY_ID:
         required: true
@@ -55,14 +59,14 @@ jobs:
         run: |
           echo "${{secrets.SSH_KEY}}" > private-key
           sudo chmod 600 private-key
-          scp -o StrictHostKeyChecking=no -i private-key ./tmp/aws-ec2-allow-dispatch-github-event-resources/dispatch-github-event.sh ${{secrets.SSH_USER}}@$PUBLIC_IP:~/dispatch-github-event.sh
+          scp -o StrictHostKeyChecking=no -i private-key ./tmp/aws-ec2-allow-dispatch-github-event-resources/dispatch-github-event.sh ${{secrets.SSH_USER}}@$PUBLIC_IP:~/${{inputs.fileName}}.sh
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
 
 
-          sed -i -e '"'"'s|${EVENT}|'"'"'"${{inputs.dispatch-event}}"'"'"'|g; s|${GITHUB_TOKEN}|'"'"'"${{secrets.TOKEN_TO_DISPATCH_EVENT}}"'"'"'|g; s|${ORGANIZATION}|'"'"'"${{inputs.organization}}"'"'"'|g; s|${REPOSITORY}|'"'"'"${{inputs.repository}}"'"'"'|g'"'"' ~/dispatch-github-event.sh
+          sed -i -e '"'"'s|${EVENT}|'"'"'"${{inputs.dispatch-event}}"'"'"'|g; s|${GITHUB_TOKEN}|'"'"'"${{secrets.TOKEN_TO_DISPATCH_EVENT}}"'"'"'|g; s|${ORGANIZATION}|'"'"'"${{inputs.organization}}"'"'"'|g; s|${REPOSITORY}|'"'"'"${{inputs.repository}}"'"'"'|g'"'"' ~/'${{inputs.fileName}}'.sh
 
-          sudo cp ~/dispatch-github-event.sh /var/lib/cloud/scripts/per-boot/dispatch-github-event.sh
-          sudo chmod 744 /var/lib/cloud/scripts/per-boot/dispatch-github-event.sh
+          sudo cp ~/'${{inputs.fileName}}'.sh /var/lib/cloud/scripts/per-boot/'${{inputs.fileName}}'.sh
+          sudo chmod 744 /var/lib/cloud/scripts/per-boot/'${{inputs.fileName}}'.sh
           sudo rm ~/dispatch-github-event.sh
 
           exit
