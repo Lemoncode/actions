@@ -19,6 +19,10 @@ on:
       DOCKER_RUN_PARAMS:
         required: false
         description: "Docker flags. For example env variables: '-e PORT=80'"
+      S3_ENV_FILE_BUCKET:
+        required: false
+      S3_ENV_FILE_KEY:
+        required: false
       SSH_KEY:
         required: true
       SSH_USER:
@@ -39,11 +43,22 @@ jobs:
         run: |
           PUBLIC_IP=$(aws ec2 describe-instances --instance-ids ${{secrets.AWS_EC2_INSTANCE_ID}} --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
           echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
+      - name: Load env file from AWS
+        env:
+          S3_ENV_FILE_BUCKET: ${{secrets.S3_ENV_FILE_BUCKET}}}
+        if: env.S3_ENV_FILE_BUCKET != ''
+        run: aws s3api get-object --bucket ${{secrets.S3_ENV_FILE_BUCKET}} --key ${{secrets.S3_ENV_FILE_KEY}} .docker-env
+      - name: Load empty env file as fallback
+        env:
+          S3_ENV_FILE_BUCKET: ${{secrets.S3_ENV_FILE_BUCKET}}}
+        if: env.S3_ENV_FILE_BUCKET == ''
+        run: echo "" > .docker-env
       # Reference: https://stackoverflow.com/questions/63317771/launch-docker-automatically-when-starting-ec2-server
       - name: Run docker container
         run: |
           echo "${{secrets.SSH_KEY}}" > private-key
           sudo chmod 600 private-key
+          scp -o StrictHostKeyChecking=no -i private-key .docker-env ${{secrets.SSH_USER}}@$PUBLIC_IP:~/.docker-env
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
 
           aws ecr get-login-password --region '${{secrets.AWS_REGION}}' | docker login --username AWS --password-stdin '${{secrets.AWS_DOCKER_REGISTRY}}'
@@ -51,7 +66,7 @@ jobs:
           docker stop app
           docker rm app
           docker image prune -a -f
-          docker run --name app -d '${{secrets.DOCKER_RUN_PARAMS}}' '${{secrets.DOCKER_IMAGE_NAME}}'
+          docker run --name app -d '${{secrets.DOCKER_RUN_PARAMS}}' --env-file .docker-env '${{secrets.DOCKER_IMAGE_NAME}}'
           docker image prune -a -f
 
           DOCKER_CONFIG_FILE=/home/'${{secrets.SSH_USER}}'/.docker/config.json

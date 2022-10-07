@@ -15,6 +15,7 @@ on:
         required: true
       AWS_DOMAIN_RECORD_NAME:
         required: true
+
 jobs:
   update-route53-record:
     runs-on: ubuntu-latest
