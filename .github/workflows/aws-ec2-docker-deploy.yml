@@ -46,12 +46,12 @@ jobs:
       - name: Load env file from AWS
         env:
           S3_ENV_FILE_BUCKET: ${{secrets.S3_ENV_FILE_BUCKET}}}
-        if: env.S3_ENV_FILE_BUCKET != ''
+        if: ${{env.S3_ENV_FILE_BUCKET != ''}}
         run: aws s3api get-object --bucket ${{secrets.S3_ENV_FILE_BUCKET}} --key ${{secrets.S3_ENV_FILE_KEY}} .docker-env
       - name: Load empty env file as fallback
         env:
           S3_ENV_FILE_BUCKET: ${{secrets.S3_ENV_FILE_BUCKET}}}
-        if: env.S3_ENV_FILE_BUCKET == ''
+        if: ${{env.S3_ENV_FILE_BUCKET == ''}}
         run: echo "" > .docker-env
       # Reference: https://stackoverflow.com/questions/63317771/launch-docker-automatically-when-starting-ec2-server
       - name: Run docker container
