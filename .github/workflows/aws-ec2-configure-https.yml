@@ -1,0 +1,90 @@
+name: Configure HTTPS in EC2
+
+on:
+  workflow_call:
+    inputs:
+      dockerExposedPort:
+        required: true
+        type: number
+    secrets:
+      AWS_DEPLOY_ACCESS_KEY_ID:
+        required: true
+      AWS_DEPLOY_SECRET_ACCESS_KEY:
+        required: true
+      AWS_REGION:
+        required: true
+      AWS_EC2_INSTANCE_ID:
+        required: true
+      SSH_KEY:
+        required: true
+      SSH_USER:
+        required: true
+      DOMAIN_RECORD_NAME:
+        required: true
+      EMAIL:
+        required: true
+jobs:
+  configure-nginx-and-letsencrypt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Actions repository # Clone this repository in tmp folder to get access to resources
+        uses: actions/checkout@v3
+        with:
+          repository: lemoncode/actions
+          ref: develop
+          path: tmp
+      - name: AWS login
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_DEPLOY_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEPLOY_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Set EC2 Public IP environment variable
+        run: |
+          PUBLIC_IP=$(aws ec2 describe-instances --instance-ids ${{secrets.AWS_EC2_INSTANCE_ID}} --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+          echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
+      - name: Configure Nginx and Let's encrypt
+        run: |
+          echo "${{secrets.SSH_KEY}}" > private-key
+          sudo chmod 600 private-key
+          scp -o StrictHostKeyChecking=no -i private-key -r ./tmp/aws-ec2-configure-https-resources ${{secrets.SSH_USER}}@$PUBLIC_IP:~/nginx-config
+          ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
+
+          sudo yum update -y
+          sudo amazon-linux-extras install nginx1 -y
+
+          sudo sed -i -e '"'"'s|DOCKER_EXPOSED_PORT|'${{inputs.dockerExposedPort}}'|g'"'"' ~/nginx-config/https_custom.conf
+          sudo cp -v ~/nginx-config/nginx.conf /etc/nginx/nginx.conf
+          sudo cp -v ~/nginx-config/https_custom.conf /etc/nginx/conf.d/https_custom.conf
+          sudo rm -rf ~/nginx-config
+
+          sudo systemctl enable nginx
+          sudo systemctl start nginx
+
+          sudo wget -r --no-parent -A "epel-release-*.rpm" https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/
+          sudo rpm -Uvh dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-*.rpm --force
+          sudo yum-config-manager --enable epel*
+          sudo yum install -y certbot
+          sudo certbot certonly --debug --non-interactive --email '${{secrets.EMAIL}}' --agree-tos --standalone --domains '${{secrets.DOMAIN_RECORD_NAME}}' --keep-until-expiring --pre-hook "sudo service nginx stop" --post-hook "sudo service nginx start"
+
+          CERT_PATH=/etc/letsencrypt/live/cert
+          if test -f "$CERT_PATH"; then
+          rm -rf $CERT_PATH
+          fi
+
+          sudo ln -sf /etc/letsencrypt/live/'${{secrets.DOMAIN_RECORD_NAME}}' /etc/letsencrypt/live/cert
+
+          echo "SHELL=/bin/sh
+          PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+          0 0 * * 0 /usr/bin/certbot renew && sudo systemctl restart nginx" > ~/tmp
+
+          sudo service nginx reload
+
+          sudo cp -v -f ~/tmp /etc/cron.d/certbot_renew
+          sudo rm ~/tmp
+          sudo chmod 0644 /etc/cron.d/certbot_renew
+          sudo systemctl start crond.service
+          sudo service crond restart
+
+          exit
+          '
