@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: lemoncode/actions
-          ref: develop
+          ref: main
           path: tmp
       - name: AWS login
         uses: aws-actions/configure-aws-credentials@v1
