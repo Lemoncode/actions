@@ -66,7 +66,7 @@ jobs:
           docker stop app
           docker rm app
           docker image prune -a -f
-          docker run --name app -d --platform linux/amd64 '${{secrets.DOCKER_RUN_PARAMS}}' --env-file .docker-env '${{secrets.DOCKER_IMAGE_NAME}}'
+          docker run --name app -d '${{secrets.DOCKER_RUN_PARAMS}}' --env-file .docker-env '${{secrets.DOCKER_IMAGE_NAME}}'
           docker image prune -a -f
 
           DOCKER_CONFIG_FILE=/home/'${{secrets.SSH_USER}}'/.docker/config.json
