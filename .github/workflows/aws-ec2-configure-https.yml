@@ -6,6 +6,10 @@ on:
       dockerExposedPort:
         required: true
         type: number
+      httpsConfigFilePath:
+        required: false
+        default: ./tmp/aws-ec2-configure-https-resources/https_custom.conf
+        type: string
     secrets:
       AWS_DEPLOY_ACCESS_KEY_ID:
         required: true
@@ -47,7 +51,8 @@ jobs:
         run: |
           echo "${{secrets.SSH_KEY}}" > private-key
           sudo chmod 600 private-key
-          scp -o StrictHostKeyChecking=no -i private-key -r ./tmp/aws-ec2-configure-https-resources ${{secrets.SSH_USER}}@$PUBLIC_IP:~/nginx-config
+          scp -o StrictHostKeyChecking=no -i private-key ./tmp/aws-ec2-configure-https-resources/nginx.conf ${{secrets.SSH_USER}}@$PUBLIC_IP:~/nginx-config/nginx.conf
+          scp -o StrictHostKeyChecking=no -i private-key ${{inputs.httpsConfigFilePath}} ${{secrets.SSH_USER}}@$PUBLIC_IP:~/nginx-config/https_custom.conf
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
 
           sudo yum update -y
