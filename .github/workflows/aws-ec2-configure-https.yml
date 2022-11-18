@@ -31,6 +31,8 @@ jobs:
   configure-nginx-and-letsencrypt:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
       - name: Checkout Actions repository # Clone this repository in tmp folder to get access to resources
         uses: actions/checkout@v3
         with:
