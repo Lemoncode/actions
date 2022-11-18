@@ -51,5 +51,8 @@ jobs:
           echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
       - name: Configure Nginx and Let's encrypt
         run: |
-          ls -la
-
+          echo "${{secrets.SSH_KEY}}" > private-key
+          sudo chmod 600 private-key
+          scp -o StrictHostKeyChecking=no -i private-key -r ./tmp ${{secrets.SSH_USER}}@$PUBLIC_IP:~/nginx-config
+          scp -o StrictHostKeyChecking=no -i private-key ${{inputs.httpsConfigFilePath}} ${{secrets.SSH_USER}}@$PUBLIC_IP:~/nginx-config/https_custom.conf
+          
