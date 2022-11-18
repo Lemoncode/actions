@@ -53,6 +53,5 @@ jobs:
         run: |
           echo "${{secrets.SSH_KEY}}" > private-key
           sudo chmod 600 private-key
-          scp -o StrictHostKeyChecking=no -i private-key -r ./tmp ${{secrets.SSH_USER}}@$PUBLIC_IP:~/nginx-config
+          scp -o StrictHostKeyChecking=no -i private-key -r ./tmp/aws-ec2-configure-https-resources ${{secrets.SSH_USER}}@$PUBLIC_IP:~/nginx-config
           scp -o StrictHostKeyChecking=no -i private-key ${{inputs.httpsConfigFilePath}} ${{secrets.SSH_USER}}@$PUBLIC_IP:~/nginx-config/https_custom.conf
-          
