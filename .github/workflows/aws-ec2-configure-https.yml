@@ -52,6 +52,7 @@ jobs:
           echo "${{secrets.SSH_KEY}}" > private-key
           sudo chmod 600 private-key
           scp -o StrictHostKeyChecking=no -i private-key -r ./tmp ${{secrets.SSH_USER}}@$PUBLIC_IP:~/nginx-config
+          ls -la
           scp -o StrictHostKeyChecking=no -i private-key ${{inputs.httpsConfigFilePath}} ${{secrets.SSH_USER}}@$PUBLIC_IP:~/nginx-config/https_custom.conf
           ssh -o StrictHostKeyChecking=no -i private-key ${{secrets.SSH_USER}}@$PUBLIC_IP '
 
